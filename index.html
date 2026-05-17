@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="dark" data-dark-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GREEN-API · WhatsApp Instance Console</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>" />
+  <style>
+    /* ── GitHub-inspired design system ── */
+    :root {
+      --color-canvas-default: #0d1117;
+      --color-canvas-subtle:  #161b22;
+      --color-canvas-inset:   #010409;
+      --color-border-default: #30363d;
+      --color-border-muted:   #21262d;
+      --color-fg-default:     #e6edf3;
+      --color-fg-muted:       #8b949e;
+      --color-fg-subtle:      #6e7681;
+      --color-accent-fg:      #58a6ff;
+      --color-accent-emphasis:#1f6feb;
+      --color-success-fg:     #3fb950;
+      --color-success-emphasis:#238636;
+      --color-danger-fg:      #f85149;
+      --color-danger-emphasis:#da3633;
+      --color-warning-fg:     #d29922;
+      --color-warning-emphasis:#9e6a03;
+      --color-green-api:      #25d366;
+      --color-green-api-dark: #128c7e;
+      --color-green-api-light:#dcf8c6;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 0 rgba(0,0,0,.04);
+      --shadow-md: 0 3px 6px rgba(0,0,0,.3), 0 6px 16px rgba(0,0,0,.2);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,.4);
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--color-canvas-default);
+      color: var(--color-fg-default);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Top Navigation Bar ── */
+    .navbar {
+      background: var(--color-canvas-subtle);
+      border-bottom: 1px solid var(--color-border-default);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--color-fg-default);
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .navbar-brand .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--color-green-api), var(--color-green-api-dark));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .navbar-brand span.org { color: var(--color-fg-muted); font-weight: 400; }
+    .navbar-brand span.sep { color: var(--color-border-default); }
+    .navbar-brand span.repo { color: var(--color-fg-default); }
+
+    .navbar-badge {
+      background: var(--color-border-muted);
+      color: var(--color-fg-muted);
+      border: 1px solid var(--color-border-default);
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .navbar-spacer { flex: 1; }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--color-fg-muted);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-fg-subtle);
+      transition: background .3s;
+    }
+    .status-dot.online { background: var(--color-success-fg); box-shadow: 0 0 6px var(--color-success-fg); }
+    .status-dot.offline { background: var(--color-danger-fg); }
+    .status-dot.checking { background: var(--color-warning-fg); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: .4; }
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--color-border-muted);
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-header p {
+      color: var(--color-fg-muted);
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .badge-green { background: rgba(35,134,54,.2); color: var(--color-success-fg); border: 1px solid rgba(63,185,80,.3); }
+    .badge-blue  { background: rgba(31,111,235,.2); color: var(--color-accent-fg);  border: 1px solid rgba(88,166,255,.3); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--color-canvas-subtle);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--color-border-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.02);
+    }
+
+    .card-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-fg-default);
+      flex: 1;
+    }
+
+    .card-body { padding: 18px; }
+
+    /* ── Form Elements ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-fg-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      background: var(--color-canvas-inset);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-sm);
+      color: var(--color-fg-default);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 8px 12px;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--color-accent-emphasis);
+      box-shadow: 0 0 0 3px rgba(31,111,235,.25);
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--color-fg-subtle); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--color-border-muted);
+      margin: 18px 0;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border-muted);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      transition: background .15s;
+    }
+
+    .btn:hover::after { background: rgba(255,255,255,.06); }
+    .btn:active::after { background: rgba(0,0,0,.1); }
+
+    .btn-primary {
+      background: var(--color-success-emphasis);
+      color: #fff;
+      border: 1px solid rgba(240,246,252,.1);
+    }
+    .btn-primary:hover { background: #2ea043; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.06);
+      color: var(--color-fg-default);
+      border: 1px solid var(--color-border-default);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.1); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-accent-fg);
+      border: 1px solid var(--color-border-default);
+    }
+    .btn-ghost:hover { background: rgba(88,166,255,.1); border-color: var(--color-accent-fg); }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .btn:disabled::after { display: none; }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-icon { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Method Headers ── */
+    .method-section {
+      background: var(--color-canvas-inset);
+      border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .method-section:last-child { margin-bottom: 0; }
+
+    .method-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--color-border-muted);
+    }
+
+    .method-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: .3px;
+    }
+    .method-get  { background: rgba(35,134,54,.25);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    .method-post { background: rgba(31,111,235,.25); color: #79c0ff; border: 1px solid rgba(88,166,255,.3); }
+
+    .method-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-fg-default);
+    }
+
+    .method-body { padding: 12px 14px; }
+
+    /* ── Response Panel ── */
+    .response-panel {
+      position: sticky;
+      top: 80px;
+    }
+
+    .response-area {
+      background: var(--color-canvas-inset);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-fg-default);
+      padding: 16px;
+      min-height: 420px;
+      max-height: 70vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .response-area::-webkit-scrollbar { width: 6px; }
+    .response-area::-webkit-scrollbar-track { background: transparent; }
+    .response-area::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 3px; }
+
+    .response-empty {
+      color: var(--color-fg-subtle);
+      font-style: italic;
+      font-family: var(--font-sans);
+    }
+
+    /* ── Response syntax highlight ── */
+    .json-key    { color: #79c0ff; }
+    .json-str    { color: #a5d6ff; }
+    .json-num    { color: #79c0ff; }
+    .json-bool   { color: #ff7b72; }
+    .json-null   { color: var(--color-fg-subtle); }
+
+    /* ── Toast Notifications ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--color-canvas-subtle);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn .2s ease;
+      min-width: 260px;
+      max-width: 380px;
+    }
+
+    .toast.success { border-left: 3px solid var(--color-success-fg); }
+    .toast.error   { border-left: 3px solid var(--color-danger-fg); }
+    .toast.info    { border-left: 3px solid var(--color-accent-fg); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0);   opacity: 1; }
+      to   { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* ── History ── */
+    .history-item {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .1s;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+    }
+    .history-item:hover { background: rgba(255,255,255,.05); border-color: var(--color-border-muted); }
+    .history-item:last-child { margin-bottom: 0; }
+    .history-item .hi-method { font-family: var(--font-mono); font-size: 11px; }
+    .history-item .hi-time { margin-left: auto; font-size: 11px; color: var(--color-fg-subtle); }
+    .history-item .hi-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .hi-status.ok  { background: var(--color-success-fg); }
+    .hi-status.err { background: var(--color-danger-fg); }
+
+    /* ── Copy Button ── */
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--color-border-default);
+      color: var(--color-fg-muted);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.06); color: var(--color-fg-default); }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      padding: 24px;
+      border-top: 1px solid var(--color-border-muted);
+      text-align: center;
+      color: var(--color-fg-subtle);
+      font-size: 12px;
+    }
+
+    .footer a { color: var(--color-accent-fg); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .response-panel { position: static; }
+    }
+
+    /* ── Animations ── */
+    .card { animation: fadeUp .25s ease both; }
+    .card:nth-child(2) { animation-delay: .05s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Custom scrollbar for body */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-canvas-default); }
+    ::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-fg-subtle); }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--color-border-muted);
+      margin-bottom: 14px;
+    }
+
+    .tab {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-fg-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s;
+      user-select: none;
+    }
+
+    .tab:hover { color: var(--color-fg-default); }
+    .tab.active { color: var(--color-fg-default); border-bottom-color: var(--color-green-api); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Green API branding accent ── */
+    .green-accent { color: var(--color-green-api); }
+
+    .endpoint-url {
+      background: var(--color-canvas-inset);
+      border: 1px solid var(--color-border-muted);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-fg-muted);
+      margin-bottom: 10px;
+      word-break: break-all;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .endpoint-url .ep-method {
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-top: 1px;
+    }
+
+    .response-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border-muted);
+      background: rgba(255,255,255,.02);
+    }
+
+    .response-toolbar h2 {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .http-status {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .status-2xx { background: rgba(35,134,54,.2); color: var(--color-success-fg); }
+    .status-4xx { background: rgba(218,54,51,.2); color: var(--color-danger-fg); }
+    .status-5xx { background: rgba(218,54,51,.2); color: var(--color-danger-fg); }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#">
+    <div class="logo">💬</div>
+    <span class="org">green-api</span>
+    <span class="sep">/</span>
+    <span class="repo">whatsapp-console</span>
+  </a>
+  <span class="navbar-badge">Public</span>
+  <div class="navbar-spacer"></div>
+  <div class="status-indicator">
+    <div class="status-dot" id="globalStatus"></div>
+    <span id="globalStatusText">Not connected</span>
+  </div>
+</nav>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Main -->
+<div class="container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>
+      💬 WhatsApp Instance Console
+      <span class="badge badge-green">GREEN-API</span>
+      <span class="badge badge-blue">v1.0</span>
+    </h1>
+    <p>Send messages and manage your WhatsApp instance via GREEN-API. Enter your credentials and use the buttons below to call API methods.</p>
+  </div>
+
+  <!-- Two-column grid -->
+  <div class="grid">
+
+    <!-- LEFT: Controls Panel -->
+    <div>
+      <!-- Credentials Card -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span>🔐</span>
+          <h2>Instance Credentials</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>idInstance</label>
+            <input type="text" id="idInstance" placeholder="7107622527" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>ApiTokenInstance</label>
+            <input type="text" id="apiToken" placeholder="264e71e42eec4c47b9..." autocomplete="off" />
+          </div>
+          <div class="form-group" style="margin-top:4px;">
+            <label>API URL <span style="color:var(--color-fg-subtle);font-weight:400;text-transform:none;">(auto-detected)</span></label>
+            <input type="text" id="apiUrl" placeholder="https://7107.api.greenapi.com" autocomplete="off" readonly style="cursor:default;" />
+          </div>
+          <div style="margin-top:14px;">
+            <button class="btn btn-secondary" onclick="testConnection()">
+              <span class="btn-icon">⚡</span>
+              <span class="spinner"></span>
+              Test Connection (getStateInstance)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Methods Card -->
+      <div class="card">
+        <div class="card-header">
+          <span>🛠️</span>
+          <h2>API Methods</h2>
+        </div>
+        <div class="card-body">
+
+          <!-- getSettings -->
+          <div class="method-section">
+            <div class="method-header">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-name">getSettings</span>
+            </div>
+            <div class="method-body">
+              <div class="endpoint-url">
+                <span class="ep-method method-get">GET</span>
+                <span>{apiUrl}/waInstance{id}/getSettings/{token}</span>
+              </div>
+              <button class="btn btn-primary" onclick="callMethod('getSettings')">
+                <span class="btn-icon">📋</span>
+                <span class="spinner"></span>
+                getSettings
+              </button>
+            </div>
+          </div>
+
+          <!-- getStateInstance -->
+          <div class="method-section">
+            <div class="method-header">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-name">getStateInstance</span>
+            </div>
+            <div class="method-body">
+              <div class="endpoint-url">
+                <span class="ep-method method-get">GET</span>
+                <span>{apiUrl}/waInstance{id}/getStateInstance/{token}</span>
+              </div>
+              <button class="btn btn-primary" onclick="callMethod('getStateInstance')">
+                <span class="btn-icon">📡</span>
+                <span class="spinner"></span>
+                getStateInstance
+              </button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Messaging</div>
+
+          <!-- sendMessage -->
+          <div class="method-section">
+            <div class="method-header">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-name">sendMessage</span>
+            </div>
+            <div class="method-body">
+              <div class="endpoint-url">
+                <span class="ep-method method-post">POST</span>
+                <span>{apiUrl}/waInstance{id}/sendMessage/{token}</span>
+              </div>
+              <div class="form-group">
+                <label>Chat ID (Phone number with country code)</label>
+                <input type="text" id="msgPhone" placeholder="77754320708" />
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea id="msgText" rows="3" placeholder="Hello! This message was sent via GREEN-API 🚀"></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="callMethod('sendMessage')">
+                <span class="btn-icon">✉️</span>
+                <span class="spinner"></span>
+                sendMessage
+              </button>
+            </div>
+          </div>
+
+          <!-- sendFileByUrl -->
+          <div class="method-section">
+            <div class="method-header">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-name">sendFileByUrl</span>
+            </div>
+            <div class="method-body">
+              <div class="endpoint-url">
+                <span class="ep-method method-post">POST</span>
+                <span>{apiUrl}/waInstance{id}/sendFileByUrl/{token}</span>
+              </div>
+              <div class="form-group">
+                <label>Chat ID (Phone number with country code)</label>
+                <input type="text" id="filePhone" placeholder="77754320708" />
+              </div>
+              <div class="form-group">
+                <label>File URL</label>
+                <input type="text" id="fileUrl" placeholder="https://my.site.com/img/horse.png" />
+              </div>
+              <div class="form-group">
+                <label>File Name</label>
+                <input type="text" id="fileName" placeholder="horse.png" />
+              </div>
+              <div class="form-group">
+                <label>Caption <span style="color:var(--color-fg-subtle);font-weight:400;text-transform:none;">(optional)</span></label>
+                <input type="text" id="fileCaption" placeholder="Optional description..." />
+              </div>
+              <button class="btn btn-primary" onclick="callMethod('sendFileByUrl')">
+                <span class="btn-icon">📎</span>
+                <span class="spinner"></span>
+                sendFileByUrl
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Response Panel -->
+    <div class="response-panel">
+      <div class="card">
+        <!-- Tabs -->
+        <div class="card-header" style="flex-direction:column; align-items:stretch; padding-bottom:0; border-bottom:none;">
+          <div style="display:flex; align-items:center; gap:8px; padding-bottom:10px;">
+            <span>📨</span>
+            <h2 style="font-size:13px;font-weight:600;">Response</h2>
+            <span class="http-status" id="httpStatus" style="display:none;"></span>
+            <div style="margin-left:auto; display:flex; gap:6px;">
+              <button class="copy-btn" onclick="copyResponse()" title="Copy response">📋 Copy</button>
+              <button class="copy-btn" onclick="clearResponse()" title="Clear">✕ Clear</button>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="tab active" data-tab="response" onclick="switchTab('response')">Response</div>
+            <div class="tab" data-tab="history" onclick="switchTab('history')">History <span id="historyCount" style="background:var(--color-border-default);padding:1px 6px;border-radius:10px;font-size:10px;margin-left:2px;">0</span></div>
+          </div>
+        </div>
+
+        <div class="card-body" style="padding:14px;">
+          <!-- Response tab -->
+          <div class="tab-content active" id="tab-response">
+            <div class="response-area" id="responseArea" readonly>
+              <span class="response-empty">// Response will appear here after calling an API method...</span>
+            </div>
+          </div>
+
+          <!-- History tab -->
+          <div class="tab-content" id="tab-history">
+            <div id="historyList" style="min-height:200px;">
+              <div style="color:var(--color-fg-subtle); font-size:13px; padding:20px 0; text-align:center;">
+                No history yet. Call an API method to see it here.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <span>ℹ️</span>
+          <h2>Quick Reference</h2>
+        </div>
+        <div class="card-body" style="font-size:12px; color:var(--color-fg-muted);">
+          <div style="margin-bottom:8px;">
+            <strong style="color:var(--color-fg-default);">Chat ID format:</strong><br>
+            Personal: <code style="color:var(--color-green-api);">77001234567@c.us</code><br>
+            Group: <code style="color:var(--color-accent-fg);">1234567890@g.us</code>
+          </div>
+          <div style="margin-bottom:8px;">
+            <strong style="color:var(--color-fg-default);">Phone format:</strong><br>
+            Enter digits only, e.g. <code style="color:var(--color-green-api);">77001234567</code>
+          </div>
+          <div>
+            <strong style="color:var(--color-fg-default);">File URL tips:</strong><br>
+            Must be a direct link ending with a file extension.<br>
+            Max size: <code>100 MB</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  Built for <a href="https://green-api.com" target="_blank">GREEN-API</a> DevOps Test Assignment ·
+  <a href="https://green-api.com/docs" target="_blank">Documentation</a> ·
+  WhatsApp Instance Console v1.0
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────
+  const state = {
+    history: [],
+    lastResponse: null,
+  };
+
+  // ─── Auto-fill API URL from idInstance ───────────────────────────────────
+  document.getElementById('idInstance').addEventListener('input', function() {
+    const id = this.value.trim();
+    if (id) {
+      // Extract prefix (first 4 chars for 10-digit IDs, or first part)
+      const prefix = id.substring(0, 4);
+      document.getElementById('apiUrl').value = `https://${prefix}.api.greenapi.com`;
+    } else {
+      document.getElementById('apiUrl').value = '';
+    }
+  });
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  function getCredentials() {
+    const id    = document.getElementById('idInstance').value.trim();
+    const token = document.getElementById('apiToken').value.trim();
+    const url   = document.getElementById('apiUrl').value.trim() ||
+                  `https://${id.substring(0,4)}.api.greenapi.com`;
+    return { id, token, url };
+  }
+
+  function validateCredentials() {
+    const { id, token } = getCredentials();
+    if (!id || !token) {
+      showToast('Please enter idInstance and ApiTokenInstance', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  function formatChatId(phone) {
+    const clean = phone.replace(/\D/g, '');
+    return clean.includes('@') ? phone : `${clean}@c.us`;
+  }
+
+  // ─── API Calls ───────────────────────────────────────────────────────────
+  async function callMethod(method) {
+    if (!validateCredentials()) return;
+    const { id, token, url } = getCredentials();
+    const btn = event.currentTarget;
+    setLoading(btn, true);
+
+    let apiUrl, options, label;
+
+    try {
+      switch (method) {
+        case 'getSettings':
+          apiUrl = `${url}/waInstance${id}/getSettings/${token}`;
+          options = { method: 'GET' };
+          label = 'getSettings';
+          break;
+
+        case 'getStateInstance':
+          apiUrl = `${url}/waInstance${id}/getStateInstance/${token}`;
+          options = { method: 'GET' };
+          label = 'getStateInstance';
+          break;
+
+        case 'sendMessage': {
+          const phone = document.getElementById('msgPhone').value.trim();
+          const msg   = document.getElementById('msgText').value.trim();
+          if (!phone) { showToast('Phone number is required', 'error'); return; }
+          if (!msg)   { showToast('Message text is required', 'error'); return; }
+          apiUrl = `${url}/waInstance${id}/sendMessage/${token}`;
+          options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chatId: formatChatId(phone), message: msg }),
+          };
+          label = 'sendMessage';
+          break;
+        }
+
+        case 'sendFileByUrl': {
+          const phone   = document.getElementById('filePhone').value.trim();
+          const fileUrl = document.getElementById('fileUrl').value.trim();
+          const fname   = document.getElementById('fileName').value.trim();
+          const caption = document.getElementById('fileCaption').value.trim();
+          if (!phone)   { showToast('Phone number is required', 'error'); return; }
+          if (!fileUrl) { showToast('File URL is required', 'error'); return; }
+          if (!fname)   { showToast('File name is required', 'error'); return; }
+          const body = { chatId: formatChatId(phone), urlFile: fileUrl, fileName: fname };
+          if (caption) body.caption = caption;
+          apiUrl = `${url}/waInstance${id}/sendFileByUrl/${token}`;
+          options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          };
+          label = 'sendFileByUrl';
+          break;
+        }
+      }
+
+      const resp = await fetch(apiUrl, options);
+      const text = await resp.text();
+      let parsed;
+      try { parsed = JSON.parse(text); } catch { parsed = text; }
+
+      displayResponse(parsed, resp.status, label);
+      addHistory(label, resp.status, parsed);
+
+      if (resp.ok) {
+        showToast(`${label} succeeded (${resp.status})`, 'success');
+        if (method === 'getStateInstance' || method === 'testConnection') {
+          updateGlobalStatus(parsed);
+        }
+      } else {
+        showToast(`${label} returned ${resp.status}`, 'error');
+      }
+
+    } catch (err) {
+      displayResponse({ error: err.message, hint: 'Check console for details. CORS may be blocking the request — use a CORS proxy or run locally.' }, 0, label);
+      addHistory(label, 0, { error: err.message });
+      showToast(`Network error: ${err.message}`, 'error');
+      console.error(err);
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  async function testConnection() {
+    if (!validateCredentials()) return;
+    const { id, token, url } = getCredentials();
+    const btn = event.currentTarget;
+    setLoading(btn, true);
+    document.getElementById('globalStatus').className = 'status-dot checking';
+    document.getElementById('globalStatusText').textContent = 'Checking...';
+
+    try {
+      const resp = await fetch(`${url}/waInstance${id}/getStateInstance/${token}`);
+      const parsed = await resp.json();
+      displayResponse(parsed, resp.status, 'getStateInstance');
+      addHistory('getStateInstance', resp.status, parsed);
+      updateGlobalStatus(parsed);
+      showToast(`Connected! State: ${parsed.stateInstance || 'unknown'}`, 'success');
+    } catch (err) {
+      document.getElementById('globalStatus').className = 'status-dot offline';
+      document.getElementById('globalStatusText').textContent = 'Connection failed';
+      displayResponse({ error: err.message }, 0, 'testConnection');
+      showToast('Connection failed: ' + err.message, 'error');
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  // ─── UI Helpers ──────────────────────────────────────────────────────────
+  function updateGlobalStatus(data) {
+    const dot  = document.getElementById('globalStatus');
+    const text = document.getElementById('globalStatusText');
+    const s = data.stateInstance || '';
+    if (s === 'authorized') {
+      dot.className = 'status-dot online';
+      text.textContent = 'Authorized';
+    } else if (s) {
+      dot.className = 'status-dot offline';
+      text.textContent = s;
+    } else {
+      dot.className = 'status-dot offline';
+      text.textContent = 'Error';
+    }
+  }
+
+  function setLoading(btn, loading) {
+    btn.disabled = loading;
+    btn.classList.toggle('loading', loading);
+  }
+
+  function displayResponse(data, status, method) {
+    state.lastResponse = data;
+    const area = document.getElementById('responseArea');
+    const statusEl = document.getElementById('httpStatus');
+
+    // Show HTTP status badge
+    if (status) {
+      statusEl.style.display = 'inline-flex';
+      statusEl.textContent = status;
+      statusEl.className = 'http-status ' + (status >= 200 && status < 300 ? 'status-2xx' :
+                                             status >= 400 && status < 500 ? 'status-4xx' : 'status-5xx');
+    } else {
+      statusEl.style.display = 'none';
+    }
+
+    const json = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    area.innerHTML = syntaxHighlight(json);
+    // Switch to response tab
+    switchTab('response');
+  }
+
+  function syntaxHighlight(json) {
+    return json
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+        let cls = 'json-num';
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? 'json-key' : 'json-str';
+        } else if (/true|false/.test(match)) {
+          cls = 'json-bool';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return `<span class="${cls}">${match}</span>`;
+      });
+  }
+
+  function clearResponse() {
+    document.getElementById('responseArea').innerHTML =
+      '<span class="response-empty">// Response will appear here after calling an API method...</span>';
+    document.getElementById('httpStatus').style.display = 'none';
+    state.lastResponse = null;
+  }
+
+  function copyResponse() {
+    if (!state.lastResponse) { showToast('Nothing to copy', 'info'); return; }
+    const text = typeof state.lastResponse === 'string'
+      ? state.lastResponse
+      : JSON.stringify(state.lastResponse, null, 2);
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success'));
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+  }
+
+  // ─── History ─────────────────────────────────────────────────────────────
+  function addHistory(method, status, data) {
+    const entry = { method, status, data, time: new Date() };
+    state.history.unshift(entry);
+    if (state.history.length > 20) state.history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    document.getElementById('historyCount').textContent = state.history.length;
+    if (!state.history.length) return;
+    list.innerHTML = state.history.map((e, i) => `
+      <div class="history-item" onclick="viewHistoryEntry(${i})">
+        <div class="hi-status ${e.status >= 200 && e.status < 300 ? 'ok' : 'err'}"></div>
+        <span class="hi-method ${e.status >= 200 && e.status < 300 ? 'green-accent' : ''}">${e.method}</span>
+        ${e.status ? `<span style="font-size:11px;color:var(--color-fg-subtle);">${e.status}</span>` : ''}
+        <span class="hi-time">${formatTime(e.time)}</span>
+      </div>
+    `).join('');
+  }
+
+  function viewHistoryEntry(i) {
+    const e = state.history[i];
+    displayResponse(e.data, e.status, e.method);
+    switchTab('response');
+  }
+
+  function formatTime(d) {
+    return d.toLocaleTimeString('en-US', { hour12: false });
+  }
+
+  // ─── Toast ───────────────────────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'slideOut .2s ease forwards';
+      setTimeout(() => toast.remove(), 200);
+    }, 3500);
+  }
+
+  // ─── Init ────────────────────────────────────────────────────────────────
+  // Pre-fill demo placeholders (no real credentials)
+  (function prefill() {
+    document.getElementById('msgText').value = 'Hello! This message was sent via GREEN-API 🚀';
+    document.getElementById('fileUrl').value = 'https://my.site.com/img/horse.png';
+    document.getElementById('fileName').value = 'horse.png';
+    document.getElementById('fileCaption').value = 'Sent via GREEN-API';
+  })();
+
+  // Bind Ctrl+Enter in message textarea to send
+  document.getElementById('msgText').addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') callMethod('sendMessage');
+  });
+</script>
+</body>
+</html>
